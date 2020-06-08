@@ -48,7 +48,7 @@
                     {% else %}
                         <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ b }}&billnum={{ d_latest_data[b]['number'] }}&congress={{ d_latest_data[b]['congress'] }}" class="btn btn-light" role="button">Bill Text</a>
                     {% endif %}
-                    <a href="https:www.govtrack.us/congress/bills/{{ d_latest_data[b]['congress'] }}/{{ b }}{{ d_latest_data[b]['number'] }}" class="btn btn-success" role="button">Govtrack.us Link</a>
+                    <a href="https://govtrack.us/congress/bills/{{ d_latest_data[b]['congress'] }}/{{ b }}{{ d_latest_data[b]['number'] }}" class="btn btn-success" role="button">Govtrack.us Link</a>
                     <p>Date: {{ d_latest_data[b]['updated_at'] }}</p>
                 </div>
                 {% endfor %}

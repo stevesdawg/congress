@@ -1,5 +1,6 @@
 .python-version
 
+/certs
 /virt
 /cache
 /data
