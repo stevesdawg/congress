@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='my.css') }}">
+
+    <title>Gov Status</title>
+  </head>
+  <body>
+
+        <div class="row">
+            <div class="col-md bg-danger">
+              <h1>Upcoming Elections</h1>
+
+              <div>
+              <a href="https://www.senate.gov/general/contact_information/senators_cfm.cfm" class="btn btn-primary btn-lg" role="button">Contact Senators</a>
+              </div>
+
+              <div>
+              <a href="https://www.house.gov/representatives" class="btn btn-primary btn-lg" role="button">Contact Representatives</a>
+              </div>
+            </div>
+            <div class="col-md">
+                <h1>Most Recent Congressional Votes</h1>
+                {% for v in vote_types %}
+                    <div><h4>{{ dv[v] }}</h4></div>
+                    {% for x in dv_latest_data[v] %}
+                        <div><span>Title: </span><a href="https://www.govtrack.us/congress/votes/116-2020/{{ v }}{{ x['number'] }}">{{ x['question'] }}</a></div>
+                        <div><p>Date: {{ x['date'] }}</p></div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            <div class="col-md bg-primary">
+                <h1>Most Recent Bills In Work</h1>
+                {% for b in bill_types %}
+                <div><h4>{{ d[b] }}</h4></div>
+                <div>
+                    <p>Title: {{ d_latest_data[b]['official_title'] }}</p>
+                    {% if d_latest_urls[b] is none %}
+                        <button type="button" class="btn btn-primary" disabled>Bill Text</button>
+                    {% else %}
+                        <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ b }}&billnum={{ d_latest_data[b]['number'] }}&congress={{ d_latest_data[b]['congress'] }}" class="btn btn-light" role="button">Bill Text</a>
+                    {% endif %}
+                    <a href="https:www.govtrack.us/congress/bills/{{ d_latest_data[b]['congress'] }}/{{ b }}{{ d_latest_data[b]['number'] }}" class="btn btn-success" role="button">Govtrack.us Link</a>
+                    <p>Date: {{ d_latest_data[b]['updated_at'] }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
