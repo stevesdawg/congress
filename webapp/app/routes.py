@@ -45,11 +45,14 @@ for b in bill_types:
 d_latest_urls = {}
 for b in bill_types:
     url = "https://api.fdsys.gov/link?collection=bills&billtype=" + b + "&billnum=" + d_latest_data[b]['number'] + "&congress=" + d_latest_data[b]['congress']
-    r = requests.get(url, timeout=1)
-    if r.status_code >= 400:
+    try:
+        r = requests.get(url, timeout=1)
+        if r.status_code >= 400:
+            d_latest_urls[b] = None
+        else:
+            d_latest_urls[b] = url
+    except requests.ReadTimeout:
         d_latest_urls[b] = None
-    else:
-        d_latest_urls[b] = url
 
 Votes.loadsort_new_votes()
 Votes.process_all_records_date()
