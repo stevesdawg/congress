@@ -30,8 +30,9 @@ class Votes:
 
     @classmethod
     def process_all_records_date(cls):
-        """For both senate and house votes, determine the first vote ID and the
-        last vote ID that occured on the specified day."""
+        """For both senate and house votes, construct a dictionary with keys
+        as the dates of the session, and values as a list of votes that occured on that date.
+        If no votes occured on a date, that date will not be included in dictionary."""
         for v in cls.vote_types:
             cls.dv_date_record[v] = {} # initialize the 1-layer deep nested dictionary
             for dirname in cls.dv_dirnames[v][::-1]:
