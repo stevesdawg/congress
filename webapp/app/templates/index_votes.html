@@ -13,10 +13,10 @@
   </head>
   <body>
     <nav class="navbar navbar-light" style="background-color: #e3f2fd">
-        <a class="navbar-brand">Navbar</a>
+        <h1>Gov Stat.US</h1>
     </nav>
-        <div class="row">
-            <div class="col-md bg-danger elections">
+        <div class="row three-panel">
+            <div class="col-md elections">
               <h1 class="section-header">Upcoming Elections</h1>
 
               <div>
@@ -27,7 +27,7 @@
               <a href="https://www.house.gov/representatives" class="btn btn-primary btn-lg" role="button">Contact Representatives</a>
               </div>
             </div>
-            <div class="col-md">
+            <div class="col-md votes">
                 <h1>Most Recent Congressional Votes</h1>
                 {% for v in vote_types %}
                     <div><h4>{{ dv[v] }}</h4></div>
@@ -37,14 +37,14 @@
                     {% endfor %}
                 {% endfor %}
             </div>
-            <div class="col-md bg-primary">
+            <div class="col-md bills">
                 <h1>Most Recent Bills In Work</h1>
                 {% for b in bill_types %}
                 <div><h4>{{ d[b] }}</h4></div>
                 <div>
                     <p>Title: {{ d_latest_data[b]['official_title'] }}</p>
                     {% if d_latest_urls[b] is none %}
-                        <button type="button" class="btn btn-primary" disabled>Bill Text</button>
+                        <button type="button" class="btn btn-light" disabled>Bill Text</button>
                     {% else %}
                         <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ b }}&billnum={{ d_latest_data[b]['number'] }}&congress={{ d_latest_data[b]['congress'] }}" class="btn btn-light" role="button">Bill Text</a>
                     {% endif %}
