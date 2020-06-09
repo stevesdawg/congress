@@ -28,17 +28,17 @@
               </div>
             </div>
             <div class="col-md votes">
-                <h1>Most Recent Congressional Votes</h1>
+                <h1 class="section-header">Most Recent Congressional Votes</h1>
                 {% for v in vote_types %}
                     <div><h4>{{ dv[v] }}</h4></div>
                     {% for x in dv_latest_data[v] %}
                         <div><span>Title: </span><a href="https://www.govtrack.us/congress/votes/116-2020/{{ v }}{{ x['number'] }}">{{ x['question'] }}</a></div>
-                        <div><p>Date: {{ x['date'] }}</p></div>
+                        <div><p>Date: {{ x['date'][:10] }}</p></div>
                     {% endfor %}
                 {% endfor %}
             </div>
             <div class="col-md bills">
-                <h1>Most Recent Bills In Work</h1>
+                <h1 class="section-header">Most Recent Bills In Work</h1>
                 {% for b in bill_types %}
                 <div><h4>{{ d[b] }}</h4></div>
                 <div>
@@ -49,7 +49,7 @@
                         <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ b }}&billnum={{ d_latest_data[b]['number'] }}&congress={{ d_latest_data[b]['congress'] }}" class="btn btn-light" role="button">Bill Text</a>
                     {% endif %}
                     <a href="https://govtrack.us/congress/bills/{{ d_latest_data[b]['congress'] }}/{{ b }}{{ d_latest_data[b]['number'] }}" class="btn btn-success" role="button">Govtrack.us Link</a>
-                    <p>Date: {{ d_latest_data[b]['updated_at'] }}</p>
+                    <p>Date: {{ d_latest_data[b]['updated_at'][:10] }}</p>
                 </div>
                 {% endfor %}
             </div>
