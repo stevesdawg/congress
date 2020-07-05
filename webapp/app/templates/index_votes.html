@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='my.css') }}">
+
+    <title>Gov Status</title>
+  </head>
+  <body>
+    <nav class="navbar navbar-light" style="background-color: #e3f2fd">
+        <h1>Gov Stat.US</h1>
+    </nav>
+        <div class="row three-panel">
+            <div class="col-md votes">
+                <h1 class="section-header">Most Recent Congressional Votes</h1>
+                {% for v in vote_types %}
+                    <div><h4>{{ dv[v] }}</h4></div>
+                    {% for x in dv_latest_data[v] %}
+                        <table class="table table-hover" style="table-layout:fixed; border:1px #B1D5E8 solid;">
+                            <tbody>
+                                <tr>
+                                    <td colspan="2"><a href="https://www.govtrack.us/congress/votes/116-2020/{{ v }}{{ x[0] }}">{{ x[1] }}</a></td>
+                                    <th>Result: {{ x[2] }}</th>
+                                </tr>
+                                <tr>
+                                    <td class="tally-cell"><div>Yeas</div><div>{{ x[3] }}</div></td>
+                                    <td class="tally-cell"><div>Nays</div><div>{{ x[4] }}</div></td>
+                                    <td class="tally-cell"><div>Not Voting</div><div>{{ x[5] }}</div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            <div class="col-md bills">
+                <h1 class="section-header">Most Recent Bills In Work</h1>
+                {% for b in bill_types %}
+                <div><h4>{{ d[b] }}</h4></div>
+                <div>
+                    <p>Title: {{ d_latest_data[b]['official_title'] }}</p>
+                    {% if d_latest_urls[b] is none %}
+                        <button type="button" class="btn btn-light" disabled>Bill Text</button>
+                    {% else %}
+                        <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ b }}&billnum={{ d_latest_data[b]['number'] }}&congress={{ d_latest_data[b]['congress'] }}" class="btn btn-light" role="button">Bill Text</a>
+                    {% endif %}
+                    <a href="https://govtrack.us/congress/bills/{{ d_latest_data[b]['congress'] }}/{{ b }}{{ d_latest_data[b]['number'] }}" class="btn btn-success" role="button">Govtrack.us Link</a>
+                    <p>Date: {{ d_latest_data[b]['updated_at'][:10] }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="row three-panel">
+            <div class="col-md elections">
+              <h1 class="section-header">Upcoming Elections</h1>
+
+              <div>
+              <a href="https://www.senate.gov/general/contact_information/senators_cfm.cfm" class="btn btn-primary btn-lg" role="button">Contact Senators</a>
+              </div>
+
+              <div>
+              <a href="https://www.house.gov/representatives" class="btn btn-primary btn-lg" role="button">Contact Representatives</a>
+              </div>
+            </div>
+        </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
+</html>
