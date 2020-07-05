@@ -2,8 +2,9 @@ import os
 import json
 import requests
 import datetime
-from flask import render_template
+from flask import render_template, jsonify
 from Votes import Votes
+from Budget import read_data
 from app import app
 
 # globals
@@ -57,6 +58,16 @@ for b in bill_types:
 Votes.loadsort_new_votes()
 Votes.process_all_records_date()
 latest_votes = Votes.return_json_by_date(str(datetime.datetime.now().date()))
+
+data_dict = read_data()
+
+@app.route('/budget_data')
+def transmit_data():
+    return jsonify(data_dict)
+
+@app.route('/budget')
+def budget():
+    return render_template('data.html')
 
 @app.route('/')
 @app.route('/index')

@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 CWD = os.path.dirname(os.path.abspath('__file__'))
-VOTES_PATH = os.path.join(CWD, '..', '..', 'congress', 'data', '116', 'votes', '2020')
+VOTES_PATH = os.path.join(CWD, '..', 'data', '116', 'votes', '2020')
 JSON_NAME = 'data.json'
 
 
