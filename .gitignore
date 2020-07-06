@@ -58,3 +58,7 @@ docs/_build/
 
 # Local things
 /dev/
+
+# db stuff
+webapp/migrations/
+webapp/app/config.py

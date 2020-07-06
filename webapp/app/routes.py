@@ -28,6 +28,8 @@ d['sjres'] = 'Senate Joint Resolution'
 # filenames dictionary
 d_filenames = {}
 for b in bill_types:
+    # sort by bill-number. Bill number is the suffix of the filename.
+    # Use lambda to sort by the suffix.
     d_filenames[b] = sorted(os.listdir(os.path.join(BILLS_PATH, b)), key=lambda x: int(x[len(b):]))
 
 # latest directory dictionary
@@ -55,9 +57,13 @@ for b in bill_types:
     except requests.ReadTimeout:
         d_latest_urls[b] = None
 
-Votes.loadsort_new_votes()
-Votes.process_all_records_date()
-latest_votes = Votes.return_json_by_date(str(datetime.datetime.now().date()))
+
+#Votes.loadsort_new_votes()
+#Votes.process_all_records_date()
+#latest_votes = Votes.return_json_by_date(str(datetime.datetime.now().date()))
+
+## mysql functions
+#Votes.load_votes_into_mysql()
 
 data_dict = read_data()
 
@@ -72,6 +78,8 @@ def budget():
 @app.route('/')
 @app.route('/index')
 def index():
+    latest_votes = Votes.return_sql_json_by_date(datetime.datetime.now() - datetime.timedelta(10, 0, 0))
+
     return render_template('index_votes.html', vote_types=Votes.vote_types, dv=Votes.dv,
         dv_latest_data=latest_votes, bill_types=bill_types, d=d,
         d_latest_data=d_latest_data, d_latest_urls=d_latest_urls)

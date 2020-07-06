@@ -45,6 +45,10 @@ div.bills {
     background-color: #b1d5e8;
 }
 
+td.tally-cell {
+    width: 33.3%;
+}
+
 nav {
     background-color: #b1ede8;
 }

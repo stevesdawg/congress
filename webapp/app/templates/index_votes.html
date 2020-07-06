@@ -31,24 +31,24 @@
 	</nav>
 
         <div class="row three-panel">
-            <div class="col-md elections">
-              <h1 class="section-header">Upcoming Elections</h1>
-
-              <div>
-              <a href="https://www.senate.gov/general/contact_information/senators_cfm.cfm" class="btn btn-primary btn-lg" role="button">Contact Senators</a>
-              </div>
-
-              <div>
-              <a href="https://www.house.gov/representatives" class="btn btn-primary btn-lg" role="button">Contact Representatives</a>
-              </div>
-            </div>
             <div class="col-md votes">
                 <h1 class="section-header">Most Recent Congressional Votes</h1>
                 {% for v in vote_types %}
                     <div><h4>{{ dv[v] }}</h4></div>
                     {% for x in dv_latest_data[v] %}
-                        <div><span>Title: </span><a href="https://www.govtrack.us/congress/votes/116-2020/{{ v }}{{ x['number'] }}">{{ x['question'] }}</a></div>
-                        <div><p>Date: {{ x['date'][:10] }}</p></div>
+                        <table class="table table-hover" style="table-layout:fixed; border:1px #B1D5E8 solid;">
+                            <tbody>
+                                <tr>
+                                    <td colspan="2"><a href="https://www.govtrack.us/congress/votes/116-2020/{{ v }}{{ x[0] }}">{{ x[1] }}</a></td>
+                                    <th>Result: {{ x[2] }}</th>
+                                </tr>
+                                <tr>
+                                    <td class="tally-cell"><div>Yeas</div><div>{{ x[3] }}</div></td>
+                                    <td class="tally-cell"><div>Nays</div><div>{{ x[4] }}</div></td>
+                                    <td class="tally-cell"><div>Not Voting</div><div>{{ x[5] }}</div></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     {% endfor %}
                 {% endfor %}
             </div>
@@ -67,6 +67,19 @@
                     <p>Date: {{ d_latest_data[b]['updated_at'][:10] }}</p>
                 </div>
                 {% endfor %}
+            </div>
+        </div>
+        <div class="row three-panel">
+            <div class="col-md elections">
+              <h1 class="section-header">Upcoming Elections</h1>
+
+              <div>
+              <a href="https://www.senate.gov/general/contact_information/senators_cfm.cfm" class="btn btn-primary btn-lg" role="button">Contact Senators</a>
+              </div>
+
+              <div>
+              <a href="https://www.house.gov/representatives" class="btn btn-primary btn-lg" role="button">Contact Representatives</a>
+              </div>
             </div>
         </div>
 

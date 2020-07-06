@@ -2,8 +2,11 @@ import os
 import json
 from datetime import datetime
 
+from app import db
+from app.models import Vote
+
 CWD = os.path.dirname(os.path.abspath('__file__'))
-VOTES_PATH = os.path.join(CWD, '..', 'data', '116', 'votes', '2020')
+VOTES_PATH = os.path.join(CWD, '..', '..', 'congress', 'data', '116', 'votes', '2020')
 JSON_NAME = 'data.json'
 
 
@@ -15,6 +18,75 @@ class Votes:
     dv_dirnames = {}
     dv_date_record = {}
     dv_minmax = {}
+
+
+    @classmethod
+    def load_votes_into_mysql(cls):
+        """Read all json data saved, and push it into mysql db"""
+        for dir_name in os.listdir(VOTES_PATH):
+            with open(os.path.join(VOTES_PATH, dir_name, JSON_NAME), 'r') as f:
+                data = json.load(f)
+
+            c = data['chamber']
+            n = data['number']
+            q = data['question']
+            d = data['date']
+            r = data['result']
+            try:
+                nays = data['votes']['Nay']
+            except KeyError:
+                nays = []
+            try:
+                yeas = data['votes']['Yea']
+            except KeyError:
+                yeas = []
+            try:
+                abstains = data['votes']['Not Voting']
+            except KeyError:
+                abstains = []
+
+            d = d[:19] # strip off the timezone offset
+            dt = datetime.strptime(d, '%Y-%m-%dT%H:%M:%S').date()
+
+            num_nays = len(nays)
+            num_yeas = len(yeas)
+            num_abstains = len(abstains)
+
+            v = Vote(chamber=c,
+                     vote_num=n,
+                     date=dt,
+                     vote_result=r if len(r) <= 64 else r[:64],
+                     num_yeas=num_yeas,
+                     num_nays=num_nays,
+                     num_abstains=num_abstains,
+                     question=q if len(q) <= 512 else q[:512])
+
+            db.session.add(v)
+            db.session.commit()
+
+
+    @classmethod
+    def return_sql_json_by_date(cls, date):
+        start = date.date()
+        d = {}
+
+        d['s'] = db.session.query(Vote.vote_num,
+            Vote.question,
+            Vote.vote_result,
+            Vote.num_yeas,
+            Vote.num_nays,
+            Vote.num_abstains,
+            Vote.date).filter(Vote.date >= start).filter(Vote.chamber == 's').order_by(Vote.date).all()
+
+        d['h'] = db.session.query(Vote.vote_num,
+            Vote.question,
+            Vote.vote_result,
+            Vote.num_yeas,
+            Vote.num_nays,
+            Vote.num_abstains,
+            Vote.date).filter(Vote.date >= start).filter(Vote.chamber == 'h').order_by(Vote.date).all()
+
+        return d
 
 
     @classmethod
