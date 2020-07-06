@@ -12,9 +12,24 @@
     <title>Gov Status</title>
   </head>
   <body>
-    <nav class="navbar navbar-light" style="background-color: #e3f2fd">
-        <h1>Gov Stat.US</h1>
-    </nav>
+
+	<nav class="navbar navbar-expand-lg navbar-light">
+	  <a class="navbar-brand" href="javascript:void(0)">GovStat.US</a>
+	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+	    <span class="navbar-toggler-icon"></span>
+	  </button>
+	  <div class="collapse navbar-collapse" id="navbarNav">
+	    <ul class="navbar-nav">
+	      <li class="nav-item active">
+		<a class="nav-link" href="javascript:void(0)">Congress<span class="sr-only">(current)</span></a>
+	      </li>
+	      <li class="nav-item">
+		      <a class="nav-link" href="{{ url_for('budget') }}">Budget</a>
+	      </li>
+	    </ul>
+	  </div>
+	</nav>
+
         <div class="row three-panel">
             <div class="col-md votes">
                 <h1 class="section-header">Most Recent Congressional Votes</h1>
