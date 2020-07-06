@@ -10,6 +10,7 @@ class Vote(db.Model):
     num_nays = db.Column(db.Integer)
     num_abstains = db.Column(db.Integer)
     required = db.Column(db.String(10))
+    vote_type = db.Column(db.String(32))
     #yeas = db.relationship('Congressperson', backref='yea_vote')
     #nays = db.relationship('Congressperson', backref='nay_vote')
     #not_voting = db.relationship('Congressperson', backref='not_voting')

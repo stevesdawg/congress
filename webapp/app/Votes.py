@@ -29,9 +29,17 @@ class Votes:
 
             c = data['chamber']
             n = data['number']
+
+            entries = db.session.query(Vote.vote_num, Vote.chamber).filter(Vote.vote_num == n).filter(Vote.chamber == c).all()
+            if len(entries) > 0:
+                # If entry already exists in the database, skip adding it
+                continue
+
             q = data['question']
             d = data['date']
             r = data['result']
+            req = data['requires']
+            t = data['type']
             try:
                 nays = data['votes']['Nay']
             except KeyError:
@@ -59,6 +67,8 @@ class Votes:
                      num_yeas=num_yeas,
                      num_nays=num_nays,
                      num_abstains=num_abstains,
+                     required=req,
+                     vote_type=t if len(t) <= 32 else t[:32],
                      question=q if len(q) <= 512 else q[:512])
 
             db.session.add(v)

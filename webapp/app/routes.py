@@ -78,7 +78,7 @@ def budget():
 @app.route('/')
 @app.route('/index')
 def index():
-    latest_votes = Votes.return_sql_json_by_date(datetime.datetime.now() - datetime.timedelta(10, 0, 0))
+    latest_votes = Votes.return_sql_json_by_date(datetime.datetime.now() - datetime.timedelta(5, 0, 0))
 
     return render_template('index_votes.html', vote_types=Votes.vote_types, dv=Votes.dv,
         dv_latest_data=latest_votes, bill_types=bill_types, d=d,
