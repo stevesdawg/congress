@@ -17,6 +17,14 @@ button {
     margin: 20px;
 }
 
+h6.date {
+    margin: 20px;
+    border-radius: 6px;
+    background: #218838;
+    padding: 8px;
+    color: white;
+}
+
 /*
 span {
     border-radius: 5px;
