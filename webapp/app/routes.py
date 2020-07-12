@@ -58,10 +58,6 @@ for b in bill_types:
         d_latest_urls[b] = None
 
 
-#Votes.loadsort_new_votes()
-#Votes.process_all_records_date()
-#latest_votes = Votes.return_json_by_date(str(datetime.datetime.now().date()))
-
 ## mysql functions
 #Votes.load_votes_into_mysql()
 

@@ -77,24 +77,30 @@ class Votes:
 
     @classmethod
     def return_sql_json_by_date(cls, date):
-        start = date.date()
+        current_date = date.date()
+        date_to_query = current_date
         d = {}
 
-        d['s'] = db.session.query(Vote.vote_num,
+        ordered_dates = db.session.query(Vote.vote_num,
             Vote.question,
             Vote.vote_result,
             Vote.num_yeas,
             Vote.num_nays,
             Vote.num_abstains,
-            Vote.date).filter(Vote.date >= start).filter(Vote.chamber == 's').order_by(Vote.date).all()
+            Vote.date).order_by(Vote.date.desc())
 
-        d['h'] = db.session.query(Vote.vote_num,
-            Vote.question,
-            Vote.vote_result,
-            Vote.num_yeas,
-            Vote.num_nays,
-            Vote.num_abstains,
-            Vote.date).filter(Vote.date >= start).filter(Vote.chamber == 'h').order_by(Vote.date).all()
+        senate_ordered = ordered_dates.filter(Vote.chamber == 's')
+        senate_max_date = senate_ordered.first()[-1].date()
+        house_ordered = ordered_dates.filter(Vote.chamber == 'h')
+        house_max_date = house_ordered.first()[-1].date()
+        
+        if current_date > senate_max_date:
+            date_to_query = senate_max_date
+        d['s'] = senate_ordered.filter(Vote.date >= date_to_query).all()
+
+        if current_date > house_max_date:
+            date_to_query = house_max_date
+        d['h'] = house_ordered.filter(Vote.date >= date_to_query).all()
 
         return d
 
