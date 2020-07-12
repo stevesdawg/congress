@@ -36,6 +36,7 @@
                 {% for v in vote_types %}
                     <div><h4>{{ dv[v] }}</h4></div>
                     {% for x in dv_latest_data[v] %}
+                        <div><h6 class="date">{{ x[6].date() }}</h6></div>
                         <table class="table table-hover" style="table-layout:fixed; border:1px #B1D5E8 solid;">
                             <tbody>
                                 <tr>
