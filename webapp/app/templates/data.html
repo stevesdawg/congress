@@ -48,18 +48,18 @@
             var myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: results['Years'],
+                    labels: results['years'],
                     datasets: [{
                         label: 'Receipts',
                         backgroundColor: window.chartColors.green,
                         borderColor: window.chartColors.green,
-                        data: results['Total']['Receipts'],
+                        data: results['total_receipts'],
                         fill: false,
                     }, {
                         label: 'Outlays',
                         backgroundColor: window.chartColors.red,
                         borderColor: window.chartColors.red,
-                        data: results['Total']['Outlays'],
+                        data: results['total_outlays'],
                         fill: false,
                     }]
                 },
