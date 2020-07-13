@@ -3,8 +3,8 @@ import json
 import requests
 import datetime
 from flask import render_template, jsonify
-from Votes import Votes
-from Budget import read_data
+from app.Votes import Votes
+from app import Budget
 from app import app
 
 # globals
@@ -61,11 +61,11 @@ for b in bill_types:
 ## mysql functions
 #Votes.load_votes_into_mysql()
 
-data_dict = read_data()
+deficit_surplus_data = Budget.read_mysql_deficit_surplus()
 
 @app.route('/budget_data')
 def transmit_data():
-    return jsonify(data_dict)
+    return jsonify(deficit_surplus_data)
 
 @app.route('/budget')
 def budget():
