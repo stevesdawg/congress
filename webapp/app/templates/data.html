@@ -50,16 +50,16 @@
                 data: {
                     labels: results['years'],
                     datasets: [{
-                        label: 'Receipts',
+                        label: 'National Defense',
                         backgroundColor: window.chartColors.green,
                         borderColor: window.chartColors.green,
-                        data: results['total_receipts'],
+                        data: results['nat_def'],
                         fill: false,
                     }, {
-                        label: 'Outlays',
-                        backgroundColor: window.chartColors.red,
-                        borderColor: window.chartColors.red,
-                        data: results['total_outlays'],
+                        label: 'Education',
+                        backgroundColor: window.chartColors.blue,
+                        borderColor: window.chartColors.blue,
+                        data: results['edu'],
                         fill: false,
                     }]
                 },
@@ -72,7 +72,7 @@
                     },
                     title: {
                         display: true,
-                        text: 'Federal Budget Historical Deficit Data',
+                        text: 'Federal Budget Historical Spending Data',
                         fontSize: 20
                     },
                     tooltips: {
@@ -88,15 +88,18 @@
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Month'
+                                labelString: 'Year',
+                                fontSize: 25
                             }
                         }],
                         yAxes: [{
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Value'
-                            }
+                                labelString: 'Millions of Dollars',
+                                fontSize: 25
+                            },
+                            type: 'logarithmic'
                         }]
                     }
                 }

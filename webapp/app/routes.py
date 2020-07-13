@@ -12,6 +12,7 @@ CWD = os.path.dirname(os.path.abspath('__file__'))
 BILLS_PATH = os.path.join(CWD, '..', '..', 'congress', 'data', '116', 'bills')
 JSON_NAME = 'data.json'
 
+DEBUG = False
 
 # BILLS SCRAPER
 d = {}
@@ -25,47 +26,45 @@ d['sres'] = 'Senate Simple Resolution'
 d['sconres'] = 'Senate Concurrent Resolution'
 d['sjres'] = 'Senate Joint Resolution'
 
-# filenames dictionary
 d_filenames = {}
+d_latest = {}
+d_latest_data = {}
+d_latest_urls = {}
+# filenames dictionary
 for b in bill_types:
     # sort by bill-number. Bill number is the suffix of the filename.
     # Use lambda to sort by the suffix.
     d_filenames[b] = sorted(os.listdir(os.path.join(BILLS_PATH, b)), key=lambda x: int(x[len(b):]))
 
 # latest directory dictionary
-d_latest = {}
 for b in bill_types:
     d_latest[b] = os.path.join(BILLS_PATH, b, d_filenames[b][-1])
 
 # latest json data dictionary
-d_latest_data = {}
 for b in bill_types:
     with open(os.path.join(d_latest[b], JSON_NAME), 'r') as f:
         data = json.load(f)
     d_latest_data[b] = data
 
-# latest bills text dictionary
-d_latest_urls = {}
-for b in bill_types:
-    url = "https://api.fdsys.gov/link?collection=bills&billtype=" + b + "&billnum=" + d_latest_data[b]['number'] + "&congress=" + d_latest_data[b]['congress']
-    try:
-        r = requests.get(url, timeout=1)
-        if r.status_code >= 400:
+if DEBUG:
+    # latest bills text dictionary
+    for b in bill_types:
+        url = "https://api.fdsys.gov/link?collection=bills&billtype=" + b + "&billnum=" + d_latest_data[b]['number'] + "&congress=" + d_latest_data[b]['congress']
+        try:
+            r = requests.get(url, timeout=1)
+            if r.status_code >= 400:
+                d_latest_urls[b] = None
+            else:
+                d_latest_urls[b] = url
+        except requests.ReadTimeout:
             d_latest_urls[b] = None
-        else:
-            d_latest_urls[b] = url
-    except requests.ReadTimeout:
-        d_latest_urls[b] = None
 
-
-## mysql functions
-#Votes.load_votes_into_mysql()
-
-deficit_surplus_data = Budget.read_mysql_deficit_surplus()
 
 @app.route('/budget_data')
 def transmit_data():
-    return jsonify(deficit_surplus_data)
+#    deficit_surplus_data = Budget.read_mysql_deficit_surplus()
+    outlay_data = Budget.read_mysql_outlay_breakdown()
+    return jsonify(outlay_data)
 
 @app.route('/budget')
 def budget():
