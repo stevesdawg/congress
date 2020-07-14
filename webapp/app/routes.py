@@ -46,7 +46,7 @@ for b in bill_types:
         data = json.load(f)
     d_latest_data[b] = data
 
-if DEBUG:
+if not DEBUG:
     # latest bills text dictionary
     for b in bill_types:
         url = "https://api.fdsys.gov/link?collection=bills&billtype=" + b + "&billnum=" + d_latest_data[b]['number'] + "&congress=" + d_latest_data[b]['congress']
