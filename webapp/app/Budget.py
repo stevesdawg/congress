@@ -3,15 +3,53 @@ import pandas as pd
 import numpy as np
 
 from app import db
-from app.models import DeficitSurplus
+from app.models import DeficitSurplus, ReceiptBreakdown, OutlayBreakdown
 
 # globals
 CWD = os.path.dirname(os.path.abspath('__file__'))
 EXCEL_DIR = os.path.join(CWD, '..', 'data', 'hist_fy21')
 BUDGET_1 = 'hist01z1.xlsx'
+BUDGET_2 = 'hist02z1.xlsx'
+BUDGET_3 = 'hist03z1.xlsx'
 EXCEL_FILES = sorted(os.listdir(EXCEL_DIR))
 BUDGET_ROW_THRESH = 6
 
+key_index_dict = {}
+key_index_dict['nat_def'] = 2
+key_index_dict['nat_def_perc_outlays'] = 37
+key_index_dict['nat_def_perc_gdp'] = 47
+
+key_index_dict['hum_res'] = 3
+key_index_dict['hum_res_perc_outlays'] = 38
+key_index_dict['hum_res_perc_gdp'] = 48
+key_index_dict['edu'] = 4
+key_index_dict['health'] = 5
+key_index_dict['medicare'] = 6
+key_index_dict['income_secur'] = 7
+key_index_dict['social_secur'] = 8
+key_index_dict['vet_benef'] = 11
+
+key_index_dict['phys_res'] = 12
+key_index_dict['phys_res_perc_outlays'] = 39
+key_index_dict['phys_res_perc_gdp'] = 49
+key_index_dict['energy'] = 13
+key_index_dict['nat_res_env'] = 14
+key_index_dict['commerce_house'] = 15
+key_index_dict['transport'] = 18
+key_index_dict['comm_reg_dev'] = 19
+
+key_index_dict['net_interest'] = 20
+key_index_dict['net_interest_perc_outlays'] = 40
+key_index_dict['net_interest_perc_gdp'] = 50
+
+key_index_dict['other_funcs'] = 23
+key_index_dict['other_funcs_perc_outlays'] = 41
+key_index_dict['other_funcs_perc_gdp'] = 51
+key_index_dict['intl_aff'] = 24
+key_index_dict['sci_spa_tech'] = 25
+key_index_dict['agriculture'] = 26
+key_index_dict['admin_justice'] = 27
+key_index_dict['gen_gov'] = 28
 
 def read_mysql_deficit_surplus():
     data_dict = {}
@@ -51,4 +89,81 @@ def load_mysql_deficit_surplus():
                 pass
             db.session.add(d)
             db.session.commit()
+
+
+def load_mysql_receipt_breakdown():
+    dataxls = pd.read_excel(os.path.join(EXCEL_DIR, BUDGET_2), index_col=None)
+    for row_num, row in dataxls.iterrows():
+        if row_num > 3:
+            d = ReceiptBreakdown()
+            try:
+                d.year = int(row[0])
+            except ValueError:
+                print("Problem with Year")
+                print(row)
+                print()
+                continue
+            d.indiv_income_tax = int(row[1])
+            d.corp_income_tax = int(row[2])
+            d.soc_ins_retire_total = int(row[3])
+            d.excise_tax = int(row[6])
+            d.other = int(row[7])
+            db.session.add(d)
+            db.session.commit()
+
+
+def read_mysql_receipt_breakdown():
+    data_dict = {}
+    data_query = db.session.query(ReceiptBreakdown.year).order_by(ReceiptBreakdown.year)
+    data_dict['years'] = [x[0] for x in data_query.all()]
+    data_query = db.session.query(ReceiptBreakdown.indiv_income_tax).order_by(ReceiptBreakdown.year)
+    data_dict['indiv_income_tax'] = [x[0] for x in data_query.all()]
+    data_query = db.session.query(ReceiptBreakdown.corp_income_tax).order_by(ReceiptBreakdown.year)
+    data_dict['corp_income_tax'] = [x[0] for x in data_query.all()]
+    data_query = db.session.query(ReceiptBreakdown.soc_ins_retire_total).order_by(ReceiptBreakdown.year)
+    data_dict['insurance_retirement'] = [x[0] for x in data_query.all()]
+    data_query = db.session.query(ReceiptBreakdown.excise_tax).order_by(ReceiptBreakdown.year)
+    data_dict['excise_tax'] = [x[0] for x in data_query.all()]
+    data_query = db.session.query(ReceiptBreakdown.other).order_by(ReceiptBreakdown.year)
+    data_dict['other'] = [x[0] for x in data_query.all()]
+    return data_dict
+
+
+def load_mysql_outlay_breakdown():
+    dataxls = pd.read_excel(os.path.join(EXCEL_DIR, BUDGET_3), index_col=None)
+    num_cols = len(dataxls.iloc[0,:])
+
+    for n in range(1, num_cols):
+        d = OutlayBreakdown()
+        col = dataxls.iloc[:, n]
+        try:
+            d.year = int(col[0])
+        except ValueError:
+            print('Problem with year')
+            print(col)
+            print()
+            continue
+        for k in key_index_dict.keys():
+            # iterate over keys, get value in dataframe, insert into model object
+            try:
+                setattr(d, k, int(col[key_index_dict[k]]))
+            except ValueError:
+                try:
+                    setattr(d, k, float(col[key_index_dict[k]]))
+                except ValueError:
+                    setattr(d, k, 0)
+
+        db.session.add(d)
+        db.session.commit()
+
+
+def read_mysql_outlay_breakdown():
+    data_dict = {}
+    data_query = db.session.query(OutlayBreakdown.year).order_by(OutlayBreakdown.year)
+    data_dict['years'] = [x[0] for x in data_query.all()]
+
+    for k in key_index_dict.keys():
+        data_query = db.session.query(getattr(OutlayBreakdown, k)).order_by(OutlayBreakdown.year)
+        data_dict[k] = [x[0] for x in data_query.all()]
+    return data_dict
 

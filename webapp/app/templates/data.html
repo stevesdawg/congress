@@ -43,23 +43,29 @@
         var getData = $.get('/budget_data');
 
         getData.done(function(data) {
-            var results = data;
+            window.results = data;
             var ctx = document.getElementById('myChart').getContext('2d');
-            var myChart = new Chart(ctx, {
+            window.config = {
                 type: 'line',
                 data: {
-                    labels: results['years'],
+                    labels: window.results['years'],
                     datasets: [{
-                        label: 'Receipts',
+                        label: 'National Defense',
                         backgroundColor: window.chartColors.green,
                         borderColor: window.chartColors.green,
-                        data: results['total_receipts'],
+                        data: window.results['nat_def'],
                         fill: false,
                     }, {
-                        label: 'Outlays',
+                        label: 'Education',
+                        backgroundColor: window.chartColors.blue,
+                        borderColor: window.chartColors.blue,
+                        data: window.results['edu'],
+                        fill: false,
+                    }, {
+                        label: 'Social Security',
                         backgroundColor: window.chartColors.red,
                         borderColor: window.chartColors.red,
-                        data: results['total_outlays'],
+                        data: window.results['social_secur'],
                         fill: false,
                     }]
                 },
@@ -72,7 +78,7 @@
                     },
                     title: {
                         display: true,
-                        text: 'Federal Budget Historical Deficit Data',
+                        text: 'Federal Budget Historical Spending Data',
                         fontSize: 20
                     },
                     tooltips: {
@@ -88,21 +94,62 @@
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Month'
+                                labelString: 'Year',
+                                fontSize: 25
                             }
                         }],
                         yAxes: [{
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Value'
-                            }
+                                labelString: 'Millions of Dollars',
+                                fontSize: 25
+                            },
+                            type: 'linear'
                         }]
                     }
                 }
-            });
+            };
+            window.myChart = new Chart(ctx, window.config);
         });
+        </script>
 
+        <div class="row data-options">
+            <div class="col-md">
+                <div><h3>Data Options Panel</h3></div>
+                <!-- <div><h5>What data?</h5></div>
+                <div><h5>What channels of data?</h5></div> -->
+                <div><h5>Logarithmic Scale</h5></div>
+                <input type='checkbox' onchange='log_listener(this);'>    Logarithmic Y-Axis
+                <!-- <div><h5>Date Range</h5></div> -->
+            </div>
+        </div>
+
+        <script>
+            function log_listener(checkbox) {
+                if(checkbox.checked == true) {
+                    window.config.options.scales.yAxes[0] = {
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Millions of Dollars',
+                            fontSize: 25
+                        },
+                        type: 'logarithmic'
+                    };
+                } else {
+                    window.config.options.scales.yAxes[0] = {
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Millions of Dollars',
+                            fontSize: 25
+                        },
+                        type: 'linear'
+                    };
+                }
+                window.myChart.update();
+            }
         </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

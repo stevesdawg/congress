@@ -53,6 +53,15 @@ div.bills {
     background-color: #b1d5e8;
 }
 
+div.data-options {
+    padding-left: 30px;
+}
+
+canvas {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
 td.tally-cell {
     width: 33.3%;
 }
