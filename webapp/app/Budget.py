@@ -15,53 +15,41 @@ EXCEL_FILES = sorted(os.listdir(EXCEL_DIR))
 BUDGET_ROW_THRESH = 6
 
 key_index_dict = {}
-key_index_dict['nat_def'] = 2
-key_index_dict['nat_def_perc_outlays'] = 37
-key_index_dict['nat_def_perc_gdp'] = 47
+key_index_dict['nat_def'] = [2, 'National Defense']
+key_index_dict['nat_def_perc_outlays'] = [37, 'National Defense Percentage of Outlays']
+key_index_dict['nat_def_perc_gdp'] = [47, 'National Defense Percentage of GDP']
 
-key_index_dict['hum_res'] = 3
-key_index_dict['hum_res_perc_outlays'] = 38
-key_index_dict['hum_res_perc_gdp'] = 48
-key_index_dict['edu'] = 4
-key_index_dict['health'] = 5
-key_index_dict['medicare'] = 6
-key_index_dict['income_secur'] = 7
-key_index_dict['social_secur'] = 8
-key_index_dict['vet_benef'] = 11
+key_index_dict['hum_res'] = [3, 'Human Resources']
+key_index_dict['hum_res_perc_outlays'] = [38, 'Human Resources Percentage of Outlays']
+key_index_dict['hum_res_perc_gdp'] = [48, 'Human Resources Percentage of GDP']
+key_index_dict['edu'] = [4, 'Education']
+key_index_dict['health'] = [5, 'Health']
+key_index_dict['medicare'] = [6, 'Medicare']
+key_index_dict['income_secur'] = [7, 'Income Security']
+key_index_dict['social_secur'] = [8, 'Social Security']
+key_index_dict['vet_benef'] = [11, 'Veterans Benefits']
 
-key_index_dict['phys_res'] = 12
-key_index_dict['phys_res_perc_outlays'] = 39
-key_index_dict['phys_res_perc_gdp'] = 49
-key_index_dict['energy'] = 13
-key_index_dict['nat_res_env'] = 14
-key_index_dict['commerce_house'] = 15
-key_index_dict['transport'] = 18
-key_index_dict['comm_reg_dev'] = 19
+key_index_dict['phys_res'] = [12, 'Physical Resources']
+key_index_dict['phys_res_perc_outlays'] = [39, 'Physical Resources Percentage of Outlays']
+key_index_dict['phys_res_perc_gdp'] = [49, 'Physical Resources Percentage of GDP']
+key_index_dict['energy'] = [13, 'Energy']
+key_index_dict['nat_res_env'] = [14, 'Natural Resources and Environment']
+key_index_dict['commerce_house'] = [15, 'Commerce and Housing Credit']
+key_index_dict['transport'] = [18, 'Transportation']
+key_index_dict['comm_reg_dev'] = [19, 'Community and Regional Development']
 
-key_index_dict['net_interest'] = 20
-key_index_dict['net_interest_perc_outlays'] = 40
-key_index_dict['net_interest_perc_gdp'] = 50
+key_index_dict['net_interest'] = [20, 'Net Interest']
+key_index_dict['net_interest_perc_outlays'] = [40, 'Net Interest Percentage of Outlays']
+key_index_dict['net_interest_perc_gdp'] = [50, 'Net Interest Percentage of GDP']
 
-key_index_dict['other_funcs'] = 23
-key_index_dict['other_funcs_perc_outlays'] = 41
-key_index_dict['other_funcs_perc_gdp'] = 51
-key_index_dict['intl_aff'] = 24
-key_index_dict['sci_spa_tech'] = 25
-key_index_dict['agriculture'] = 26
-key_index_dict['admin_justice'] = 27
-key_index_dict['gen_gov'] = 28
-
-def read_mysql_deficit_surplus():
-    data_dict = {}
-    tot_data_query = db.session.query(DeficitSurplus.year).order_by(DeficitSurplus.year)
-    data_dict['years'] = [x[0] for x in tot_data_query.all()]
-    tot_data_query = db.session.query(DeficitSurplus.total_receipt).order_by(DeficitSurplus.year)
-    data_dict['total_receipts'] = [x[0] for x in tot_data_query.all()]
-    tot_data_query = db.session.query(DeficitSurplus.total_outlay).order_by(DeficitSurplus.year)
-    data_dict['total_outlays'] = [x[0] for x in tot_data_query.all()]
-    tot_data_query = db.session.query(DeficitSurplus.total_net).order_by(DeficitSurplus.year)
-    data_dict['total_net'] = [x[0] for x in tot_data_query.all()]
-    return data_dict
+key_index_dict['other_funcs'] = [23, 'Other Functions']
+key_index_dict['other_funcs_perc_outlays'] = [41, 'Other Functions Percentage of Outlays']
+key_index_dict['other_funcs_perc_gdp'] = [51, 'Other Functions Percentage of GDP']
+key_index_dict['intl_aff'] = [24, 'International Affairs']
+key_index_dict['sci_spa_tech'] = [25, 'General Science, Space, and Technology']
+key_index_dict['agriculture'] = [26, 'Agriculture']
+key_index_dict['admin_justice'] = [27, 'Administration of Justice']
+key_index_dict['gen_gov'] = [28, 'General Government']
 
 def load_mysql_deficit_surplus():
     dataxls = pd.read_excel(os.path.join(EXCEL_DIR, BUDGET_1), index_col=None)
@@ -89,6 +77,25 @@ def load_mysql_deficit_surplus():
                 pass
             db.session.add(d)
             db.session.commit()
+
+
+def read_mysql_deficit_surplus():
+    data_dict = {}
+    tot_data_query = db.session.query(DeficitSurplus.year).order_by(DeficitSurplus.year)
+    data_dict['years'] = [x[0] for x in tot_data_query.all()]
+    tot_data_query = db.session.query(DeficitSurplus.total_receipt).order_by(DeficitSurplus.year)
+    data_dict['total_receipts'] = [x[0] for x in tot_data_query.all()]
+    tot_data_query = db.session.query(DeficitSurplus.total_outlay).order_by(DeficitSurplus.year)
+    data_dict['total_outlays'] = [x[0] for x in tot_data_query.all()]
+    tot_data_query = db.session.query(DeficitSurplus.total_net).order_by(DeficitSurplus.year)
+    data_dict['total_net'] = [x[0] for x in tot_data_query.all()]
+
+    d = {}
+    d['total_receipts'] = "Total Receipts (Money Collected)"
+    d['total_outlays'] = "Total Outlays (Money Spent)"
+    d['total_net'] = "Net Deficit or Surplus"
+    data_dict['full_names'] = d
+    return data_dict
 
 
 def load_mysql_receipt_breakdown():
@@ -126,6 +133,14 @@ def read_mysql_receipt_breakdown():
     data_dict['excise_tax'] = [x[0] for x in data_query.all()]
     data_query = db.session.query(ReceiptBreakdown.other).order_by(ReceiptBreakdown.year)
     data_dict['other'] = [x[0] for x in data_query.all()]
+
+    d = {}
+    d['indiv_income_tax'] = "Individual Income Taxes"
+    d['corp_income_tax'] = "Corporate Income Taxes"
+    d['insurance_retirement'] = "Social Insurance and Retirement Receipts"
+    d['excise_tax'] = "Excise Taxes"
+    d['other'] = "Other"
+    data_dict['full_names'] = d
     return data_dict
 
 
@@ -146,10 +161,10 @@ def load_mysql_outlay_breakdown():
         for k in key_index_dict.keys():
             # iterate over keys, get value in dataframe, insert into model object
             try:
-                setattr(d, k, int(col[key_index_dict[k]]))
+                setattr(d, k, int( col[key_index_dict[k][0]] ))
             except ValueError:
                 try:
-                    setattr(d, k, float(col[key_index_dict[k]]))
+                    setattr(d, k, float( col[key_index_dict[k][0]] ))
                 except ValueError:
                     setattr(d, k, 0)
 
@@ -165,5 +180,9 @@ def read_mysql_outlay_breakdown():
     for k in key_index_dict.keys():
         data_query = db.session.query(getattr(OutlayBreakdown, k)).order_by(OutlayBreakdown.year)
         data_dict[k] = [x[0] for x in data_query.all()]
+
+    data_dict['full_names'] = {}
+    for k in key_index_dict.keys():
+        data_dict['full_names'][k] = key_index_dict[k][1]
     return data_dict
 

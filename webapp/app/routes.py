@@ -2,7 +2,7 @@ import os
 import json
 import requests
 import datetime
-from flask import render_template, jsonify
+from flask import render_template, jsonify, request
 from app.Votes import Votes
 from app import Budget
 from app import app
@@ -62,9 +62,13 @@ if not DEBUG:
 
 @app.route('/budget_data')
 def transmit_data():
-#    deficit_surplus_data = Budget.read_mysql_deficit_surplus()
-    outlay_data = Budget.read_mysql_outlay_breakdown()
-    return jsonify(outlay_data)
+    if request.args['id'] == '1':
+        return jsonify(Budget.read_mysql_deficit_surplus())
+    elif request.args['id'] == '2':
+        return jsonify(Budget.read_mysql_receipt_breakdown())
+    elif request.args['id'] == '3':
+        return jsonify(Budget.read_mysql_outlay_breakdown())
+
 
 @app.route('/budget')
 def budget():
