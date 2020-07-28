@@ -120,6 +120,7 @@ class Representative(db.Model):
     bioguide_id = db.Column(db.String(12))
     state = db.Column(db.String(5))
     district = db.Column(db.Integer)
+    party = db.Column(db.String(6))
     chamber = db.Column(db.String(1))
     active = db.Column(db.Boolean)
 
