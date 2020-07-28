@@ -1,5 +1,40 @@
 from app import db
 
+###########################
+# Many-Many Helper Tables #
+###########################
+
+yea_votes = db.Table('yea_votes',
+    db.Column('vote_id', db.Integer, db.ForeignKey('vote.id')),
+    db.Column('rep_id', db.Integer, db.ForeignKey('representative.id'))
+)
+
+nay_votes = db.Table('nay_votes',
+    db.Column('vote_id', db.Integer, db.ForeignKey('vote.id')),
+    db.Column('rep_id', db.Integer, db.ForeignKey('representative.id'))
+)
+
+not_votes = db.Table('not_votes',
+    db.Column('vote_id', db.Integer, db.ForeignKey('vote.id')),
+    db.Column('rep_id', db.Integer, db.ForeignKey('representative.id'))
+)
+
+cosponsor_bills = db.Table('cosponsor_bills',
+    db.Column('bill_id', db.Integer, db.ForeignKey('bill.id')),
+    db.Column('rep_id', db.Integer, db.ForeignKey('representative.id'))
+)
+
+bill_subjects = db.Table('bill_subjects',
+    db.Column('bill_id', db.Integer, db.ForeignKey('bill.id')),
+    db.Column('subject_id', db.Integer, db.ForeignKey('legislative_subjects.id'))
+)
+
+bill_to_bills = db.Table('bill_to_bills',
+    db.Column('parent_bill_id', db.Integer, db.ForeignKey('bill.id')),
+    db.Column('related_bill_id', db.Integer, db.ForeignKey('bill.id'))
+)
+
+
 class Vote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     chamber = db.Column(db.String(1))
@@ -11,15 +46,110 @@ class Vote(db.Model):
     num_abstains = db.Column(db.Integer)
     required = db.Column(db.String(10))
     vote_type = db.Column(db.String(32))
-    #yeas = db.relationship('Congressperson', backref='yea_vote')
-    #nays = db.relationship('Congressperson', backref='nay_vote')
-    #not_voting = db.relationship('Congressperson', backref='not_voting')
     question = db.Column(db.String(512))
-    #bill = db.relationship('Bill', backref='bill_vote')
+
+    # 1-Many Single Entity
+    bill_id = db.Column(db.Integer, db.ForeignKey('bill.id'))
+
+    # Many-Many Relationship
+    yea_voters = db.relationship('Representative', secondary=yea_votes, backref='yea_votes')
+    nay_voters = db.relationship('Representative', secondary=nay_votes, backref='nay_votes')
+    not_voters = db.relationship('Representative', secondary=not_votes, backref='not_votes')
 
     def __repr__(self):
         return '<Vote:{}-{}>'.format(self.chamber, self.vote_num)
 
+
+class BillType:
+    HCONRES = 1
+    HJRES = 2
+    HR = 3
+    HRES = 4
+    S = 5
+    SCONRES = 6
+    SJRES = 7
+    SRES = 8
+
+    d = {}
+    d[HCONRES] = 'House Concurrent Resolution'
+    d[HJRES] = 'House Joint Resolution'
+    d[HR] = 'House of Representatives'
+    d[HRES] = 'House Simple Resolution'
+    d[S] = 'Senate'
+    d[SCONRES] = 'Senate Concurrent Resolution'
+    d[SJRES] = 'Senate Joint Resolution'
+    d[SRES] = 'Senate Simple Resolution'
+
+
+class Bill(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(256))
+    congress = db.Column(db.Integer)
+    bill_type = db.Column(db.Integer)
+    bill_num = db.Column(db.Integer)
+    introduced_date = db.Column(db.DateTime)
+    committee = db.Column(db.String(128))
+    cbo_link = db.Column(db.String(128))
+    active = db.Column(db.Boolean)
+    awaiting_sig = db.Column(db.Boolean)
+    enacted = db.Column(db.Boolean)
+    vetoed = db.Column(db.Boolean)
+
+    # 1-Many Single Entity
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('representative.id'))
+
+    # 1-Many Multiple Entity
+    statuses = db.relationship('BillStatus', backref='bill')
+    votes = db.relationship('Vote', backref='bill')
+
+    # Many-Many Relationships
+    cosponsors = db.relationship('Representative', secondary=cosponsor_bills, backref='bills_cosponsored')
+    related_bills = db.relationship('Bill',
+        secondary=bill_to_bills,
+        primaryjoin='Bill.id==bill_to_bills.c.related_bill_id',
+        secondaryjoin='Bill.id==bill_to_bills.c.parent_bill_id',
+        backref='parent_bills')
+    leg_subjects = db.relationship('LegislativeSubjects', secondary=bill_subjects, backref='bills')
+
+
+class Representative(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fname = db.Column(db.String(24))
+    mname = db.Column(db.String(24))
+    lname = db.Column(db.String(24))
+    bioguide_id = db.Column(db.String(12))
+    state = db.Column(db.String(5))
+    district = db.Column(db.Integer)
+    chamber = db.Column(db.String(1))
+    active = db.Column(db.Boolean)
+
+    # 1-Many Multiple Entity
+    bills_sponsored = db.relationship('Bill', backref='sponsor')
+
+    # Many-Many Relationships covered by Backref
+    # bills_cosponsored <-> Bill
+    # yea_votes <-> Vote
+    # nay_votes <-> Vote
+    # not_votes <-> Vote
+
+
+class BillStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(32))
+    date = db.Column(db.DateTime)
+
+    # 1-Many Single Entity
+    bill_id = db.Column(db.Integer, db.ForeignKey('bill.id'))
+
+
+class LegislativeSubjects(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject = db.Column(db.String(128))
+
+
+#######################
+# Budget Models Below #
+#######################
 
 class DeficitSurplus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
