@@ -70,6 +70,8 @@ class BillType:
     SJRES = 7
     SRES = 8
 
+    types = ['hconres', 'hjres', 'hr', 'hres', 's', 'sconres', 'sjres', 'sres']
+
     d = {}
     d[HCONRES] = 'House Concurrent Resolution'
     d[HJRES] = 'House Joint Resolution'

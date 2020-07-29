@@ -127,7 +127,10 @@ class Votes:
 
             try:
                 bill = data['bill']
-                bill_q = Bill.query.filter(Bill.bill_type == bill['type']).filter(Bill.bill_num == bill['number']).filter(Bill.congress == bill['congress'])
+                bill_q = Bill.query \
+                    .filter(Bill.bill_type == getattr(BillType, bill['type'].upper())) \
+                    .filter(Bill.bill_num == bill['number']) \
+                    .filter(Bill.congress == bill['congress'])
                 bills = bill_q.all()
                 if len(bills) == 1:
                     # if bill being voted on exists in the database (TYPE, NUM, CONGRESS),
