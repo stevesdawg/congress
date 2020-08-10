@@ -120,6 +120,7 @@ class Representative(db.Model):
     mname = db.Column(db.String(24))
     lname = db.Column(db.String(24))
     bioguide_id = db.Column(db.String(12))
+    lis_id = db.Column(db.String(12))
     state = db.Column(db.String(5))
     district = db.Column(db.Integer)
     party = db.Column(db.String(6))
