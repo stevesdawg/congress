@@ -40,11 +40,17 @@ class Votes:
             try:
                 nays = data['votes']['Nay']
             except KeyError:
-                nays = []
+                try:
+                    nays = data['votes']['No']
+                except KeyError:
+                    nays = []
             try:
                 yeas = data['votes']['Yea']
             except KeyError:
-                yeas = []
+                try:
+                    yeas = data['votes']['Aye']
+                except KeyError:
+                    yeas = []
             try:
                 abstains = data['votes']['Not Voting']
             except KeyError:
@@ -72,58 +78,85 @@ class Votes:
                 # iterate over yea representatives.
                 # link the appropriate rep with this yea vote.
                 # create the rep if bioguide not in the database
-                rep_q = Representative.query.filter(Representative.bioguide_id==rep_data['id'])
+                if c == 'h':
+                    rep_q = Representative.query.filter(Representative.bioguide_id==rep_data['id'])
+                else:
+                    rep_q = Representative.query.filter(Representative.lis_id==rep_data['id'])
                 reps = rep_q.all()
                 if len(reps) > 0:
                     # the rep exists in the database
                     # link that rep with this yea vote
-                    v.yea_voters.append(reps[0])
+                    r = reps[0]
                 else:
                     # the rep doesn't exist
                     # create the rep and then link
-                    r = Representative(bioguide_id=rep_data['id'],
-                        state=rep_data['state'],
-                        party=rep_data['party'],
-                        active=True)
-                    v.yea_voters.append(r)
+                    if c == 'h':
+                        r = Representative(bioguide_id=rep_data['id'])
+                    else:
+                        r = Representative(lis_id=rep_data['id'])
+                        r.fname = rep_data['first_name']
+                        r.lname = rep_data['last_name']
+                    r.state = rep_data['state']
+                    r.party = rep_data['party']
+                    r.active = True
+                    r.chamber = c
+                v.yea_voters.append(r)
 
             for rep_data in nays:
                 # iterate over nay representatives.
                 # link the appropriate rep with this nay vote.
                 # create the rep if bioguide not in the database
-                rep_q = Representative.query.filter(Representative.bioguide_id==rep_data['id'])
+                if c == 'h':
+                    rep_q = Representative.query.filter(Representative.bioguide_id==rep_data['id'])
+                else:
+                    rep_q = Representative.query.filter(Representative.lis_id==rep_data['id'])
                 reps = rep_q.all()
                 if len(reps) > 0:
                     # the rep exists in the database
-                    # link that rep with this nay vote
-                    v.nay_voters.append(reps[0])
+                    # link that rep with this yea vote
+                    r = reps[0]
                 else:
                     # the rep doesn't exist
                     # create the rep and then link
-                    r = Representative(bioguide_id=rep_data['id'],
-                        state=rep_data['state'],
-                        party=rep_data['party'],
-                        active=True)
-                    v.nay_voters.append(r)
+                    if c == 'h':
+                        r = Representative(bioguide_id=rep_data['id'])
+                    else:
+                        r = Representative(lis_id=rep_data['id'])
+                        r.fname = rep_data['first_name']
+                        r.lname = rep_data['last_name']
+                    r.state = rep_data['state']
+                    r.party = rep_data['party']
+                    r.active = True
+                    r.chamber = c
+                v.nay_voters.append(r)
 
             for rep_data in abstains:
                 # iterate over not voting representatives.
                 # link the appropriate rep with this not vote.
                 # create the rep if bioguide not in the database
-                rep_q = Representative.query.filter(Representative.bioguide_id==rep_data['id'])
+                if c == 'h':
+                    rep_q = Representative.query.filter(Representative.bioguide_id==rep_data['id'])
+                else:
+                    rep_q = Representative.query.filter(Representative.lis_id==rep_data['id'])
                 reps = rep_q.all()
                 if len(reps) > 0:
                     # the rep exists in the database
-                    # link that rep with this not vote
-                    v.not_voters.append(reps[0])
+                    # link that rep with this yea vote
+                    r = reps[0]
                 else:
                     # the rep doesn't exist
                     # create the rep and then link
-                    r = Representative(bioguide_id=rep_data['id'],
-                        state=rep_data['state'],
-                        party=rep_data['party'],
-                        active=True)
-                    v.not_voters.append(r)
+                    if c == 'h':
+                        r = Representative(bioguide_id=rep_data['id'])
+                    else:
+                        r = Representative(lis_id=rep_data['id'])
+                        r.fname = rep_data['first_name']
+                        r.lname = rep_data['last_name']
+                    r.state = rep_data['state']
+                    r.party = rep_data['party']
+                    r.active = True
+                    r.chamber = c
+                v.nay_voters.append(r)
 
             try:
                 bill = data['bill']
