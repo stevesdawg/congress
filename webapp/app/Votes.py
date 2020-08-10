@@ -156,7 +156,7 @@ class Votes:
                     r.party = rep_data['party']
                     r.active = True
                     r.chamber = c
-                v.nay_voters.append(r)
+                v.not_voters.append(r)
 
             try:
                 bill = data['bill']
