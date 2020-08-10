@@ -62,3 +62,5 @@ docs/_build/
 # db stuff
 webapp/migrations/
 webapp/app/config.py
+webapp/tester.py
+webapp/tester2.py
