@@ -28,19 +28,20 @@ class Bills:
             type_path = os.path.join(BILLS_PATH, bill_type)
 
             for dir_name in os.listdir(type_path):
-                # check from one of the two last-modified files
-                try:
-                    with open(os.path.join(type_path, dirname, LAST_MOD_FILE1), 'r') as f:
-                        last_mod = f.read()
-                except IOError:
-                    with open(os.path.join(type_path, dirname, LAST_MOD_FILE2), 'r') as f:
-                        last_mod = f.read()
-                last_mod = last_mod[:10]
-                last_mod = datetime.strptime(last_mod, '%Y-%m-%d').date()
-                if (today - last_mod).days > 0 and last_mod_flag:
-                    # if last modified is greater than 1 day,
-                    # then ignore that file, and continue
-                    continue
+                if last_mod_flag:
+                    # check from one of the two last-modified files
+                    try:
+                        with open(os.path.join(type_path, dirname, LAST_MOD_FILE1), 'r') as f:
+                            last_mod = f.read()
+                    except IOError:
+                        with open(os.path.join(type_path, dirname, LAST_MOD_FILE2), 'r') as f:
+                            last_mod = f.read()
+                    last_mod = last_mod[:10]
+                    last_mod = datetime.strptime(last_mod, '%Y-%m-%d').date()
+                    if (today - last_mod).days > 0:
+                        # if last modified is greater than 1 day,
+                        # then ignore that file, and continue
+                        continue
 
                 with open(os.path.join(type_path, dir_name, JSON_FILE), 'r') as f:
                     data = json.load(f)
