@@ -139,7 +139,8 @@ class Representative(db.Model):
 
 class BillStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    status = db.Column(db.String(32))
+    text = db.Column(db.String(128))
+    action_type = db.Column(db.String(32))
     date = db.Column(db.DateTime)
 
     # 1-Many Single Entity

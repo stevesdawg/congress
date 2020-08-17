@@ -83,10 +83,38 @@ class Bills:
                         vetoed=veto)
                     db.session.add(b)
 
-                root = ET.parse(os.path.join(type_path, dir_name, 'fdsys_billstatus.xml')).getroot()
+                # bill statuses and actions
+                actions = data['actions']
+                for act in actions:
+                    stat = BillStatus()
+                    d = act['acted_at'][:10]
+                    d = datetime.strptime(d, '%Y-%m-%d').date()
+                    text = act['text']
+                    text = text if len(text) < 128 else text[:128]
+                    act_type = act['type']
+                    stat.date = d
+                    stat.text = text
+                    stat.action_type = act_type
+                    b.statuses.append(stat)
+
+                # legislative subjects
+                subjects = data['subjects']
+                for subj in subjects:
+                    subj_q = LegislativeSubjects.query.filter(func.lower(LegislativeSubjects.subject) == subj.lower())
+                    loaded_subjects = subj_q.all()
+                    if loaded_subjects:
+                        for sub in loaded_subjects:
+                            b.leg_subjects.append(sub)
+                    else:
+                        new_sub = LegislativeSubjects()
+                        new_sub.subject = subj
+                        b.leg_subjects.append(new_sub)
+
+                # data variable reassigned FROM json TO XML tree
+                data = ET.parse(os.path.join(type_path, dir_name, 'fdsys_billstatus.xml')).getroot()
 
                 # sponsors
-                spon = root[0].findall('sponsors')
+                spon = data[0].findall('sponsors')
                 spon = spon[0]
                 bio_id = spon[0].find('bioguideId').text
                 lname = spon[0].find('lastName').text
@@ -124,7 +152,7 @@ class Bills:
                 b.sponsor = rep
 
                 # cosponsors
-                cospon = root[0].findall('cosponsors')
+                cospon = data[0].findall('cosponsors')
                 cospon = cospon[0]
                 for c in cospon:
                     bio_id = c.find('bioguideId').text
@@ -161,5 +189,5 @@ class Bills:
                     rep.active = True
                     b.cosponsors.append(rep)
 
-            db.session.commit()
+                db.session.commit()
 
