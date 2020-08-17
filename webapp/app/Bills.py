@@ -19,9 +19,8 @@ class Bills:
     def load_bills_into_mysql(cls, last_mod_flag=False):
         """Read all json bill data, and push it into mysql db.
            Link table with other tables (Votes, Reps, Status, Subjects, etc.)"""
-
-           # Today's Date
-           today = datetime.now().date()
+        # Today's Date
+        today = datetime.now().date()
 
         for bill_type in BillType.types:
             db_bill_type = getattr(BillType, bill_type.upper())
@@ -30,10 +29,10 @@ class Bills:
             for dir_name in os.listdir(type_path):
                 # check from one of the two last-modified files
                 try:
-                    with open(os.path.join(type_path, dirname, LAST_MOD_FILE1), 'r') as f:
+                    with open(os.path.join(type_path, dir_name, LAST_MOD_FILE1), 'r') as f:
                         last_mod = f.read()
                 except IOError:
-                    with open(os.path.join(type_path, dirname, LAST_MOD_FILE2), 'r') as f:
+                    with open(os.path.join(type_path, dir_name, LAST_MOD_FILE2), 'r') as f:
                         last_mod = f.read()
                 last_mod = last_mod[:10]
                 last_mod = datetime.strptime(last_mod, '%Y-%m-%d').date()
