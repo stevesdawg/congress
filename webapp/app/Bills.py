@@ -9,18 +9,40 @@ from app.models import Vote, Bill, BillType, Representative, LegislativeSubjects
 
 CWD = os.path.dirname(os.path.abspath('__file__'))
 BILLS_PATH = os.path.join(CWD, '..', '..', 'congress', 'data', '116', 'bills')
+XML_FILE = 'fdsys_billstatus.xml'
+JSON_FILE = 'data.json'
+LAST_MOD_FILE1 = 'data-fromfdsys-lastmod.txt'
+LAST_MOD_FILE2 = 'fdsys_billstatus-lastmod.txt'
 
 class Bills:
     @classmethod
-    def load_bills_into_mysql(cls, deltas=False):
+    def load_bills_into_mysql(cls, last_mod_flag=False):
         """Read all json bill data, and push it into mysql db.
            Link table with other tables (Votes, Reps, Status, Subjects, etc.)"""
+
+           # Today's Date
+           today = datetime.now().date()
+
         for bill_type in BillType.types:
             db_bill_type = getattr(BillType, bill_type.upper())
             type_path = os.path.join(BILLS_PATH, bill_type)
 
             for dir_name in os.listdir(type_path):
-                with open(os.path.join(type_path, dir_name, 'data.json'), 'r') as f:
+                # check from one of the two last-modified files
+                try:
+                    with open(os.path.join(type_path, dirname, LAST_MOD_FILE1), 'r') as f:
+                        last_mod = f.read()
+                except IOError:
+                    with open(os.path.join(type_path, dirname, LAST_MOD_FILE2), 'r') as f:
+                        last_mod = f.read()
+                last_mod = last_mod[:10]
+                last_mod = datetime.strptime(last_mod, '%Y-%m-%d').date()
+                if (today - last_mod).days > 0 and last_mod_flag:
+                    # if last modified is greater than 1 day,
+                    # then ignore that file, and continue
+                    continue
+
+                with open(os.path.join(type_path, dir_name, JSON_FILE), 'r') as f:
                     data = json.load(f)
 
                 if data['short_title'] == None:
@@ -111,7 +133,7 @@ class Bills:
                         b.leg_subjects.append(new_sub)
 
                 # data variable reassigned FROM json TO XML tree
-                data = ET.parse(os.path.join(type_path, dir_name, 'fdsys_billstatus.xml')).getroot()
+                data = ET.parse(os.path.join(type_path, dir_name, XML_FILE)).getroot()
 
                 # sponsors
                 spon = data[0].findall('sponsors')
