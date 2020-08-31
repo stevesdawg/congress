@@ -101,7 +101,7 @@ class Bill(db.Model):
     sponsor_id = db.Column(db.Integer, db.ForeignKey('representative.id'))
 
     # 1-Many Multiple Entity
-    statuses = db.relationship('BillStatus', backref='bill')
+    statuses = db.relationship('BillStatus', backref='bill', cascade='all, delete-orphan, delete')
     votes = db.relationship('Vote', backref='bill')
 
     # Many-Many Relationships
