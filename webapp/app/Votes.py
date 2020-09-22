@@ -27,7 +27,7 @@ class Votes:
             c = data['chamber']
             n = data['number']
 
-            entries = db.session.query(Vote.vote_num, Vote.chamber).filter(Vote.vote_num == n).filter(Vote.chamber == c).all()
+            entries = Vote.query.filter(Vote.vote_num == n).filter(Vote.chamber == c).all()
             if len(entries) > 0:
                 # If vote already exists in the database, skip adding it
                 continue

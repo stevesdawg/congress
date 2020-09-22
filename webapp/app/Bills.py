@@ -28,6 +28,33 @@ class Bills:
 
             for dir_name in os.listdir(type_path):
                 # iterating over bills (one bill per directory inside type_path)
+
+                with open(os.path.join(type_path, dir_name, JSON_FILE), 'r') as f:
+                    data = json.load(f)
+
+                if data['short_title'] == None:
+                    if data['popular_title'] == None:
+                        title = data['official_title']
+                    else:
+                        title = data['popular_title']
+                else:
+                    title = data['short_title']
+                title = title if len(title) <= 256 else title[:256]
+
+                cong = data['congress']
+                num = data['number']
+                active = data['history']['active']
+                sig = data['history']['awaiting_signature']
+                enact = data['history']['enacted']
+                veto = data['history']['vetoed']
+                try:
+                    comm = data['committees'][0]['committee']
+                except IndexError:
+                    comm = None
+
+                intro_date = data['introduced_at']
+                intro_date = datetime.strptime(intro_date, '%Y-%m-%d').date()
+
                 if last_mod_flag:
                     # check from one of the two last-modified files
                     try:
@@ -81,34 +108,7 @@ class Bills:
                     db.session.commit()
                     continue
 
-                with open(os.path.join(type_path, dir_name, JSON_FILE), 'r') as f:
-                    data = json.load(f)
-
-                if data['short_title'] == None:
-                    if data['popular_title'] == None:
-                        title = data['official_title']
-                    else:
-                        title = data['popular_title']
-                else:
-                    title = data['short_title']
-                title = title if len(title) <= 256 else title[:256]
-
-                cong = data['congress']
-                num = data['number']
-                active = data['history']['active']
-                sig = data['history']['awaiting_signature']
-                enact = data['history']['enacted']
-                veto = data['history']['vetoed']
-                try:
-                    comm = data['committees'][0]['committee']
-                except IndexError:
-                    comm = None
-
-                intro_date = data['introduced_at']
-                intro_date = datetime.strptime(intro_date, '%Y-%m-%d').date()
-
-                bill_q = db.session.query(Bill) \
-                    .filter(Bill.bill_type == db_bill_type) \
+                bill_q = Bill.query.filter(Bill.bill_type == db_bill_type) \
                     .filter(Bill.bill_num == num) \
                     .filter(Bill.congress == cong)
                 bills = bill_q.all()
@@ -132,6 +132,7 @@ class Bills:
                 else:
                     # if bill has NOT been instantiated,
                     # create instantiation and add to db
+                    populated = False
                     b = Bill(title=title, congress=cong,
                         bill_type=db_bill_type,
                         bill_num=num,
