@@ -94,8 +94,8 @@ class Votes:
                         r = Representative(bioguide_id=rep_data['id'])
                     else:
                         r = Representative(lis_id=rep_data['id'])
-                        r.fname = rep_data['first_name']
-                        r.lname = rep_data['last_name']
+                        r.fname = rep_data['first_name'].title()
+                        r.lname = rep_data['last_name'].title()
                     r.state = rep_data['state']
                     r.party = rep_data['party']
                     r.active = True
@@ -122,8 +122,8 @@ class Votes:
                         r = Representative(bioguide_id=rep_data['id'])
                     else:
                         r = Representative(lis_id=rep_data['id'])
-                        r.fname = rep_data['first_name']
-                        r.lname = rep_data['last_name']
+                        r.fname = rep_data['first_name'].title()
+                        r.lname = rep_data['last_name'].title()
                     r.state = rep_data['state']
                     r.party = rep_data['party']
                     r.active = True
@@ -150,8 +150,8 @@ class Votes:
                         r = Representative(bioguide_id=rep_data['id'])
                     else:
                         r = Representative(lis_id=rep_data['id'])
-                        r.fname = rep_data['first_name']
-                        r.lname = rep_data['last_name']
+                        r.fname = rep_data['first_name'].title()
+                        r.lname = rep_data['last_name'].title()
                     r.state = rep_data['state']
                     r.party = rep_data['party']
                     r.active = True
@@ -202,7 +202,7 @@ class Votes:
         senate_max_date = senate_ordered.first()[-1].date()
         house_ordered = ordered_dates.filter(Vote.chamber == 'h')
         house_max_date = house_ordered.first()[-1].date()
-        
+
         if current_date > senate_max_date:
             date_to_query = senate_max_date
         d['s'] = senate_ordered.filter(Vote.date >= date_to_query).all()
@@ -212,4 +212,3 @@ class Votes:
         d['h'] = house_ordered.filter(Vote.date >= date_to_query).all()
 
         return d
-

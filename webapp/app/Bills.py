@@ -207,11 +207,11 @@ class Bills:
                     else:
                         rep = Representative()
                     rep.bioguide_id = bio_id
-                    rep.fname = fname
-                    rep.lname = lname
+                    rep.fname = fname.title()
+                    rep.lname = lname.title()
                     mname = spon[0].find('middleName').text
                     if mname is not None:
-                        rep.mname = mname
+                        rep.mname = mname.title()
                     rep.state = state
                     rep.party = party
                     rep.active = True
@@ -245,11 +245,11 @@ class Bills:
                         else:
                             rep = Representative()
                         rep.bioguide_id = bio_id
-                        rep.fname = fname
-                        rep.lname = lname
+                        rep.fname = fname.title()
+                        rep.lname = lname.title()
                         mname = c.find('middleName').text
                         if mname is not None:
-                            rep.mname = mname
+                            rep.mname = mname.title()
                         rep.state = state
                         rep.party = party
                         rep.active = True
@@ -267,3 +267,16 @@ class Bills:
         current_date = date.date()
         date_to_query = current_date
         d = {}
+
+        introduced_ordered_q = Bill.query.order_by(Bill.introduced_date.desc())
+        max_intro_date = introduced_ordered_q.first().introduced_date.date()
+        if current_date > max_intro_date:
+            date_to_query = max_intro_date
+
+        introduced_inrange_q = introduced_ordered_q.filter(Bill.introduced_date == date_to_query)
+        for num,type_abbrev in enumerate(BillType.types):
+            type_bills_inrange = introduced_inrange_q.filter(Bill.bill_type == num+1).all()
+            if type_bills_inrange:
+                d[type_abbrev] = type_bills_inrange
+
+        return d

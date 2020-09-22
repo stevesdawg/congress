@@ -35,7 +35,7 @@
                 <h1 class="section-header">Most Recent Congressional Votes</h1>
                 {% for v in vote_types %}
                     <div><h4>{{ dv[v] }}</h4></div>
-                    {% for x in dv_latest_data[v] %}
+                    {% for x in latest_votes[v] %}
                         <div><h6 class="date">{{ x[6].date() }}</h6></div>
                         <table class="table table-hover" style="table-layout:fixed; border:1px #B1D5E8 solid;">
                             <tbody>
@@ -55,18 +55,16 @@
             </div>
             <div class="col-md bills">
                 <h1 class="section-header">Most Recent Bills In Work</h1>
-                {% for b in bill_types %}
-                <div><h4>{{ d[b] }}</h4></div>
-                <div>
-                    <p>Title: {{ d_latest_data[b]['official_title'] }}</p>
-                    {% if d_latest_urls[b] is none %}
-                        <button type="button" class="btn btn-light" disabled>Bill Text</button>
-                    {% else %}
-                        <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ b }}&billnum={{ d_latest_data[b]['number'] }}&congress={{ d_latest_data[b]['congress'] }}" class="btn btn-light" role="button">Bill Text</a>
-                    {% endif %}
-                    <a href="https://govtrack.us/congress/bills/{{ d_latest_data[b]['congress'] }}/{{ b }}{{ d_latest_data[b]['number'] }}" class="btn btn-success" role="button">Govtrack.us Link</a>
-                    <p>Date: {{ d_latest_data[b]['updated_at'][:10] }}</p>
-                </div>
+                {% for bt in latest_bills.keys() %}
+                    <div><h4>{{ d[bt] }}</h4></div>
+                    {% for bill in latest_bills[bt] %}
+                        <div>
+                            <p>Title: {{ bill.title }}</p>
+                            <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ bt }}&billnum={{ bill.bill_num }}&congress={{ bill.congress }}" class="btn btn-light" role="button">Bill Text</a>
+                            <a href="https://govtrack.us/congress/bills/{{ bill.congress }}/{{ bt }}{{ bill.bill_num }}" class="btn btn-success" role="button">Govtrack.us Link</a>
+                            <p>Introduced Date: {{ bill.introduced_date.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                    {% endfor %}
                 {% endfor %}
             </div>
         </div>

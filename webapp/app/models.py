@@ -113,6 +113,9 @@ class Bill(db.Model):
         backref='parent_bills')
     leg_subjects = db.relationship('LegislativeSubjects', secondary=bill_subjects, backref='bills')
 
+    def __repr__(self):
+        return '<Bill:{}-{}>'.format(BillType.types[self.bill_type-1], self.bill_num)
+
 
 class Representative(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -135,6 +138,9 @@ class Representative(db.Model):
     # yea_votes <-> Vote
     # nay_votes <-> Vote
     # not_votes <-> Vote
+
+    def __repr__(self):
+        return '<{}:{}-{}>'.format(self.chamber, self.fname, self.lname)
 
 
 class BillStatus(db.Model):
