@@ -58,12 +58,38 @@
                 {% for bt in latest_bills.keys() %}
                     <div><h4>{{ d[bt] }}</h4></div>
                     {% for bill in latest_bills[bt] %}
-                        <div>
-                            <p>Title: {{ bill.title }}</p>
-                            <a href="https://api.fdsys.gov/link?collection=bills&billtype={{ bt }}&billnum={{ bill.bill_num }}&congress={{ bill.congress }}" class="btn btn-light" role="button">Bill Text</a>
-                            <a href="https://govtrack.us/congress/bills/{{ bill.congress }}/{{ bt }}{{ bill.bill_num }}" class="btn btn-success" role="button">Govtrack.us Link</a>
-                            <p>Introduced Date: {{ bill.introduced_date.strftime('%Y-%m-%d') }}</p>
-                        </div>
+                        <table class="table table-hover" style="table-layout:fixed; border:1px #B1D5E8 solid;">
+                            <tbody>
+                                <tr>
+                                    <td colspan="3">{{ bill.title }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="tally-cell"><div>Sponsor</div></td>
+                                    <td class="tally-cell"><div>Cosponsors</div></td>
+                                    <td class="tally-cell"><div>Actions</div></td>
+                                </tr>
+                                <tr>
+                                    <td class="tally-cell">
+                                      {% if bill.sponsor != None %}
+                                        <div class="rep {{ bill.sponsor.party }}">{{ bill.sponsor.fname + ' ' + bill.sponsor.lname }}</div>
+                                      {% endif %}
+                                    </td>
+                                    <td class="tally-cell">
+                                      {% for cospon in bill.cosponsors %}
+                                        {% if cospon != None %}
+                                          <div class="rep {{ cospon.party }}" style="padding:5px;">{{ cospon.fname + ' ' + cospon.lname }}</div>
+                                        {% endif %}
+                                      {% endfor %}
+                                    </td>
+                                    <td class="tally-cell">
+                                      <div style="padding:10px;">
+                                        <div class="date">{{ bill.statuses[-1].date.date() }}</div>
+                                        <div>{{ bill.statuses[-1].text }}</div>
+                                      </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     {% endfor %}
                 {% endfor %}
             </div>
