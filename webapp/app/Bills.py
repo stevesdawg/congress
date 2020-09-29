@@ -23,37 +23,22 @@ class Bills:
         today = datetime.now().date()
 
         for bill_type in BillType.types:
-            db_bill_type = getattr(BillType, bill_type.upper())
+            db_bill_type = getattr(BillType, bill_type.upper()) # db_bill_types starts counting at 1
             type_path = os.path.join(BILLS_PATH, bill_type)
 
             for dir_name in os.listdir(type_path):
                 # iterating over bills (one bill per directory inside type_path)
 
                 with open(os.path.join(type_path, dir_name, JSON_FILE), 'r') as f:
-                    data = json.load(f)
+                    jsondata = json.load(f)
 
-                if data['short_title'] == None:
-                    if data['popular_title'] == None:
-                        title = data['official_title']
-                    else:
-                        title = data['popular_title']
-                else:
-                    title = data['short_title']
-                title = title if len(title) <= 256 else title[:256]
-
-                cong = data['congress']
-                num = data['number']
-                active = data['history']['active']
-                sig = data['history']['awaiting_signature']
-                enact = data['history']['enacted']
-                veto = data['history']['vetoed']
-                try:
-                    comm = data['committees'][0]['committee']
-                except IndexError:
-                    comm = None
-
-                intro_date = data['introduced_at']
+                cong = jsondata['congress']
+                num = jsondata['number']
+                intro_date = jsondata['introduced_at']
                 intro_date = datetime.strptime(intro_date, '%Y-%m-%d').date()
+
+		# data variable reassigned FROM json TO XML tree
+		xmldata = ET.parse(os.path.join(type_path, dir_name, XML_FILE)).getroot()
 
                 if last_mod_flag:
                     # check from one of the two last-modified files
@@ -75,189 +60,19 @@ class Bills:
                         # Precondition: the bill has been fully loaded.
                         # Postcondition: the following params have been updated:
                         # active, awaiting_sig, enacted, vetoed, status objects
-                        bill_q = db.session.query(Bill) \
-                            .filter(Bill.bill_type == db_bill_type) \
+                        bill_q = Bill.query.filter(Bill.bill_type == db_bill_type) \
                             .filter(Bill.bill_num == num) \
                             .filter(Bill.congress == cong)
-                        bill = bill_q.all()[0]
-                        with open(os.path.join(type_path, dir_name, JSON_FILE), 'r') as f:
-                            data = json.load(f)
-                        bill.active = data['history']['active']
-                        bill.awaiting_sig = data['history']['awaiting_signature']
-                        bill.enacted = data['history']['enacted']
-                        bill.vetoed = data['history']['vetoed']
-
-                        # delete old statuses
-                        bill.statuses = []
-                        statuses = BillStatus.query.filter(BillStatus.bill_id == bill.id).all()
-                        for bs in statuses:
-                            db.session.delete(bs)
-
-                        actions = data['actions']
-                        for act in actions:
-                            stat = BillStatus()
-                            d = act['acted_at'][:10]
-                            d = datetime.strptime(d, '%Y-%m-%d').date()
-                            text = act['text']
-                            text = text if len(text) < 128 else text[:128]
-                            act_type = act['type']
-                            stat.date = d
-                            stat.text = text
-                            stat.action_type = act_type
-                            bill.statuses.append(stat)
-                    db.session.commit()
-                    continue
-
-                bill_q = Bill.query.filter(Bill.bill_type == db_bill_type) \
-                    .filter(Bill.bill_num == num) \
-                    .filter(Bill.congress == cong)
-                bills = bill_q.all()
-
-                if len(bills) > 0:
-                    # if the bill has been instantiated,
-                    # check if bill has been fully populated
-                    b = bills[0]
-                    populated = bool(b.title)
-                    if not populated:
-                        # if not populated, instantiate key identifying info (title, origin date)
-                        b.congress = cong
-                        b.title = title
-                        b.introduced_date = intro_date
-                    # overwrite with most recent status info
-                    b.active = active
-                    b.awaiting_sig = sig
-                    b.enacted = enact
-                    b.vetoed = veto
-                    b.committee = comm
-                else:
-                    # if bill has NOT been instantiated,
-                    # create instantiation and add to db
-                    populated = False
-                    b = Bill(title=title, congress=cong,
-                        bill_type=db_bill_type,
-                        bill_num=num,
-                        introduced_date=intro_date,
-                        committee=comm,
-                        active=active,
-                        awaiting_sig=sig,
-                        enacted=enact,
-                        vetoed=veto)
-                    db.session.add(b)
-
-                # delete old statuses
-                b.statuses = []
-                statuses = BillStatus.query.filter(BillStatus.bill_id == b.id).all()
-                for bs in statuses:
-                    db.session.delete(bs)
-                # bill statuses and actions
-                actions = data['actions']
-                for act in actions:
-                    stat = BillStatus()
-                    d = act['acted_at'][:10]
-                    d = datetime.strptime(d, '%Y-%m-%d').date()
-                    text = act['text']
-                    text = text if len(text) < 128 else text[:128]
-                    act_type = act['type']
-                    stat.date = d
-                    stat.text = text
-                    stat.action_type = act_type
-                    b.statuses.append(stat)
-
-                if not populated:
-                    # legislative subjects
-                    subjects = data['subjects']
-                    for subj in subjects:
-                        subj_q = LegislativeSubjects.query.filter(func.lower(LegislativeSubjects.subject) == subj.lower())
-                        loaded_subjects = subj_q.all()
-                        if loaded_subjects:
-                            for sub in loaded_subjects:
-                                b.leg_subjects.append(sub)
+                        bills = bill_q.all()
+                        if len(bills) == 0:
+                            # bill does not exist, call the fully_populate function
+                            Bills.fully_populate_bill(jsondata, xmldata, num, db_bill_type)
                         else:
-                            new_sub = LegislativeSubjects()
-                            new_sub.subject = subj
-                            b.leg_subjects.append(new_sub)
-
-                    # data variable reassigned FROM json TO XML tree
-                    data = ET.parse(os.path.join(type_path, dir_name, XML_FILE)).getroot()
-
-                    # sponsors
-                    spon = data[0].findall('sponsors')
-                    spon = spon[0]
-                    bio_id = spon[0].find('bioguideId').text
-                    lname = spon[0].find('lastName').text
-                    fname = spon[0].find('firstName').text
-                    state = spon[0].find('state').text
-                    party = spon[0].find('party').text
-
-                    if db_bill_type < 5:
-                        # Bill originated in the House of Representatives
-                        # Search for reps using bioguide_id
-                        rep_q = Representative.query.filter(Representative.bioguide_id == bio_id)
-                    else:
-                        # Bill originated in the Senate
-                        # Search for reps using state + party lastname
-                        rep_q = Representative.query.filter(Representative.state == state) \
-                            .filter(Representative.party == party) \
-                            .filter(func.lower(Representative.lname) == lname.lower())
-                    reps = rep_q.all()
-
-                    if len(reps) > 0:
-                        # representative exists in the database
-                        # add them as a sponsor to this bill.
-                        rep = reps[0]
-                    else:
-                        rep = Representative()
-                    rep.bioguide_id = bio_id
-                    rep.fname = fname.title()
-                    rep.lname = lname.title()
-                    mname = spon[0].find('middleName').text
-                    if mname is not None:
-                        rep.mname = mname.title()
-                    rep.state = state
-                    rep.party = party
-                    rep.active = True
-                    b.sponsor = rep
-
-                    # cosponsors
-                    cospon = data[0].findall('cosponsors')
-                    cospon = cospon[0]
-                    for c in cospon:
-                        bio_id = c.find('bioguideId').text
-                        lname = c.find('lastName').text
-                        fname = c.find('firstName').text
-                        state = c.find('state').text
-                        party = c.find('party').text
-
-                        if db_bill_type < 5:
-                            # Bill originated in the House of Representatives
-                            # Search for reps using bioguide_id
-                            rep_q = Representative.query.filter(Representative.bioguide_id == bio_id)
-                        else:
-                            # Bill originated in the Senate
-                            # Search for reps using state + party lastname
-                            rep_q = Representative.query.filter(Representative.state == state) \
-                                .filter(Representative.party == party) \
-                                .filter(func.lower(Representative.lname) == lname.lower())
-                        reps = rep_q.all()
-                        if len(reps) > 0:
-                            # representative exists in the database
-                            # add them as a cosponsor to this bill.
-                            rep = reps[0]
-                        else:
-                            rep = Representative()
-                        rep.bioguide_id = bio_id
-                        rep.fname = fname.title()
-                        rep.lname = lname.title()
-                        mname = c.find('middleName').text
-                        if mname is not None:
-                            rep.mname = mname.title()
-                        rep.state = state
-                        rep.party = party
-                        rep.active = True
-                        b.cosponsors.append(rep)
-                        # end of cosponsor iteration
-                    # end of not-populated clause
-                db.session.commit()
+                            # bill does exist, and we just want to update
+                            # update actions, 4 status variables, and cosponsors
+                            Bills.update_bill(jsondata, xmldata, bills[0])
+                        continue
+                Bills.fully_populate_bill(jsondata, xmldata, num, db_bill_type)
                 # end of dir_name iteration
             # end of bill_type iteration
         # end of function
@@ -281,3 +96,250 @@ class Bills:
                 d[type_abbrev] = type_bills_inrange
 
         return d
+
+
+    @classmethod
+    def fully_populate_bill(cls, jsondata, xmldata, bill_num, bill_type):
+        # idempotent function, will not corrupt if called even if bill is fully populated
+        if jsondata['short_title'] == None:
+            if jsondata['popular_title'] == None:
+                title = jsondata['official_title']
+            else:
+                title = jsondata['popular_title']
+        else:
+            title = jsondata['short_title']
+        title = title if len(title) <= 256 else title[:256]
+
+        cong = jsondata['congress']
+        num = jsondata['number']
+        active = jsondata['history']['active']
+        sig = jsondata['history']['awaiting_signature']
+        enact = jsondata['history']['enacted']
+        veto = jsondata['history']['vetoed']
+        try:
+            comm = jsondata['committees'][0]['committee']
+        except IndexError:
+            comm = None
+
+        intro_date = jsondata['introduced_at']
+        intro_date = datetime.strptime(intro_date, '%Y-%m-%d').date()
+
+	bill_q = Bill.query.filter(Bill.bill_type == bill_type) \
+	    .filter(Bill.bill_num == num) \
+	    .filter(Bill.congress == cong)
+	bills = bill_q.all()
+
+        if len(bills) > 0:
+            # if the bill has been instantiated,
+            # check if bill has been fully populated
+            bill = bills[0]
+            populated = bool(bill.title)
+            if not populated:
+                # if not populated, instantiate key identifying info (title, origin date)
+                bill.congress = cong
+                bill.title = title
+                bill.introduced_date = intro_date
+            # overwrite with most recent status info
+            bill.active = active
+            bill.awaiting_sig = sig
+            bill.enacted = enact
+            bill.vetoed = veto
+            bill.committee = comm
+        else:
+            # if bill has NOT been instantiated,
+            # create instantiation and add to db
+            populated = False
+            bill = Bill(title=title, congress=cong,
+                bill_type=bill_type,
+                bill_num=num,
+                introduced_date=intro_date,
+                committee=comm,
+                active=active,
+                awaiting_sig=sig,
+                enacted=enact,
+                vetoed=veto)
+            db.session.add(bill)
+
+        # delete old statuses
+        bill.statuses = [] # clears all actions attached to this bill
+        statuses = BillStatus.query.filter(BillStatus.bill_id == bill.id).all()
+        for bs in statuses:
+            db.session.delete(bs)
+        # bill statuses and actions
+        actions = jsondata['actions']
+        for act in actions:
+            stat = BillStatus()
+            d = act['acted_at'][:10]
+            d = datetime.strptime(d, '%Y-%m-%d').date()
+            text = act['text']
+            text = text if len(text) < 128 else text[:128]
+            act_type = act['type']
+            stat.date = d
+            stat.text = text
+            stat.action_type = act_type
+            bill.statuses.append(stat)
+
+        if not populated:
+            # set and link legislative subjects
+            subjects = jsondata['subjects']
+            for subj in subjects:
+                subj_q = LegislativeSubjects.query.filter(func.lower(LegislativeSubjects.subject) == subj.lower())
+                loaded_subjects = subj_q.all()
+                if loaded_subjects:
+                    for sub in loaded_subjects:
+                        bill.leg_subjects.append(sub)
+                else:
+                    new_sub = LegislativeSubjects()
+                    new_sub.subject = subj
+                    bill.leg_subjects.append(new_sub)
+
+            # sponsors
+            spon = xmldata[0].findall('sponsors')
+            spon = spon[0]
+            bio_id = spon[0].find('bioguideId').text
+            lname = spon[0].find('lastName').text
+            fname = spon[0].find('firstName').text
+            state = spon[0].find('state').text
+            party = spon[0].find('party').text
+
+            if bill_type < 5:
+                # Bill originated in the House of Representatives
+                # Search for reps using bioguide_id
+                rep_q = Representative.query.filter(Representative.bioguide_id == bio_id)
+            else:
+                # Bill originated in the Senate
+                # Search for reps using state + party lastname
+                rep_q = Representative.query.filter(Representative.state == state) \
+                    .filter(Representative.party == party) \
+                    .filter(func.lower(Representative.lname) == lname.lower())
+            reps = rep_q.all()
+
+            if len(reps) > 0:
+                # representative exists in the database
+                # add them as a sponsor to this bill.
+                rep = reps[0]
+            else:
+                rep = Representative()
+            rep.bioguide_id = bio_id
+            rep.fname = fname.title()
+            rep.lname = lname.title()
+            mname = spon[0].find('middleName').text
+            if mname is not None:
+                rep.mname = mname.title()
+            rep.state = state
+            rep.party = party
+            rep.active = True
+            bill.sponsor = rep
+            # end of not-populated clause
+
+        # cosponsors
+        bill.cosponsors = [] # clears all actions attached to this bill
+        cospon = xmldata[0].findall('cosponsors')
+        cospon = cospon[0]
+        for c in cospon:
+            bio_id = c.find('bioguideId').text
+            lname = c.find('lastName').text
+            fname = c.find('firstName').text
+            state = c.find('state').text
+            party = c.find('party').text
+
+            if bill_type < 5:
+                # Bill originated in the House of Representatives
+                # Search for reps using bioguide_id
+                rep_q = Representative.query.filter(Representative.bioguide_id == bio_id)
+            else:
+                # Bill originated in the Senate
+                # Search for reps using state + party lastname
+                rep_q = Representative.query.filter(Representative.state == state) \
+                    .filter(Representative.party == party) \
+                    .filter(func.lower(Representative.lname) == lname.lower())
+            reps = rep_q.all()
+            if len(reps) > 0:
+                # representative exists in the database
+                # add them as a cosponsor to this bill.
+                rep = reps[0]
+            else:
+                rep = Representative()
+            rep.bioguide_id = bio_id
+            rep.fname = fname.title()
+            rep.lname = lname.title()
+            mname = c.find('middleName').text
+            if mname is not None:
+                rep.mname = mname.title()
+            rep.state = state
+            rep.party = party
+            rep.active = True
+            bill.cosponsors.append(rep)
+            # end of cosponsor iteration
+        db.session.commit()
+
+
+    @classmethod
+    def update_bill(cls, jsondata, xmldata, bill):
+        # precondition: requires bill to be fully populated beforehand
+	# overwrites actions, 4 status variables, and cosponsors
+        bill.active = jsondata['history']['active']
+        bill.awaiting_sig = jsondata['history']['awaiting_signature']
+        bill.enacted = jsondata['history']['enacted']
+        bill.vetoed = jsondata['history']['vetoed']
+
+        # delete old statuses
+        bill.statuses = []
+        statuses = BillStatus.query.filter(BillStatus.bill_id == bill.id).all()
+        for bs in statuses:
+            db.session.delete(bs)
+        # append all current statuses
+        actions = jsondata['actions']
+        for act in actions:
+            stat = BillStatus()
+            d = act['acted_at'][:10]
+            d = datetime.strptime(d, '%Y-%m-%d').date()
+            text = act['text']
+            text = text if len(text) < 128 else text[:128]
+            act_type = act['type']
+            stat.date = d
+            stat.text = text
+            stat.action_type = act_type
+            bill.statuses.append(stat)
+
+        # unlink old cosponsors
+        bill.cosponsors = []
+        #link new cosponsors
+        cospon = xmldata[0].findall('cosponsors')
+        cospon = cospon[0]
+        for c in cospon:
+            bio_id = c.find('bioguideId').text
+            lname = c.find('lastName').text
+            fname = c.find('firstName').text
+            state = c.find('state').text
+            party = c.find('party').text
+
+            if bill.bill_type < 5:
+                # Bill originated in the House of Representatives
+                # Search for reps using bioguide_id
+                rep_q = Representative.query.filter(Representative.bioguide_id == bio_id)
+            else:
+                # Bill originated in the Senate
+                # Search for reps using state + party lastname
+                rep_q = Representative.query.filter(Representative.state == state) \
+                    .filter(Representative.party == party) \
+                    .filter(func.lower(Representative.lname) == lname.lower())
+            reps = rep_q.all()
+            if len(reps) > 0:
+                # representative exists in the database
+                # add them as a cosponsor to this bill.
+                rep = reps[0]
+            else:
+                rep = Representative()
+            rep.bioguide_id = bio_id
+            rep.fname = fname.title()
+            rep.lname = lname.title()
+            mname = c.find('middleName').text
+            if mname is not None:
+                rep.mname = mname.title()
+            rep.state = state
+            rep.party = party
+            rep.active = True
+            bill.cosponsors.append(rep)
+            # end of cosponsor iteration
+        db.session.commit()
