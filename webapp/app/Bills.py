@@ -84,17 +84,18 @@ class Bills:
         date_to_query = current_date
         d = {}
 
-        introduced_ordered_q = Bill.query.order_by(Bill.introduced_date.desc())
-        max_intro_date = introduced_ordered_q.first().introduced_date.date()
-        if current_date > max_intro_date:
-            date_to_query = max_intro_date
-
-        introduced_inrange_q = introduced_ordered_q.filter(Bill.introduced_date == date_to_query)
-        for num,type_abbrev in enumerate(BillType.types):
-            type_bills_inrange = introduced_inrange_q.filter(Bill.bill_type == num+1).all()
-            if type_bills_inrange:
-                d[type_abbrev] = type_bills_inrange
-
+        # store the most recent bill introduced OF EACH TYPE
+        recent_date_by_type = {}
+        for bill_type_abbr in BillType.types:
+            bill_type = getattr(BillType, bill_type_abbr.upper()) # bill_types starts counting at 1
+            introduced_ordered_q = Bill.query.filter(Bill.bill_type == bill_type).order_by(Bill.introduced_date.desc())
+            max_intro_date = introduced_ordered_q.first().introduced_date.date()
+            if current_date > max_intro_date:
+                date_to_query = max_intro_date
+            else:
+                date_to_query = current_date
+            type_bills_inrange = introduced_ordered_q.filter(Bill.introduced_date == date_to_query).all()
+            d[bill_type_abbr] = type_bills_inrange
         return d
 
 
